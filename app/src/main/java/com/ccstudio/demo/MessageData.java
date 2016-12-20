@@ -14,8 +14,9 @@ public class MessageData {
     @Retention(SOURCE)
     @IntDef({USER_TYPE_SELLER, USER_TYPE_BUYER})
     public @interface UserType {}
-    public static final int USER_TYPE_SELLER = 0;
-    public static final int USER_TYPE_BUYER = 1;
+    public static final int USER_TYPE_UNKNOWN = 0;
+    public static final int USER_TYPE_SELLER = 1;
+    public static final int USER_TYPE_BUYER = 2;
 
     public final String name;
     public final String message;
