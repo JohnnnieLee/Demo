@@ -1,12 +1,17 @@
 package com.ccstudio.demo;
 
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 
@@ -19,6 +24,9 @@ import com.android.volley.toolbox.Volley;
 import com.fasterxml.jackson.databind.util.ISO8601Utils;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.core.assist.FailReason;
+import com.nostra13.universalimageloader.core.assist.ImageSize;
+import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -52,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
 
     private RequestQueue mVolleyQueue;
 
+    private ActionBar mActionBar;
     private RecyclerView mRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
     private MessageFlowAdapter mAdapter;
@@ -87,6 +96,8 @@ public class MainActivity extends AppCompatActivity {
     private void initView() {
         setContentView(R.layout.activity_main);
 
+        mActionBar = getSupportActionBar();
+        mActionBar.setDisplayHomeAsUpEnabled(true);
         mRecyclerView = (RecyclerView) findViewById(R.id.message_flow);
         mLinearLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
@@ -133,7 +144,35 @@ public class MainActivity extends AppCompatActivity {
                         try {
                             JSONObject product = response.getJSONObject(PRODUCT_FIELD_NAME);
                             String name = product.getString(PRODUCT_NAME);
+                            mActionBar.setTitle(name);
                             String imageUrl = product.getString(PRODUCT_IMAGE_URL);
+                            ImageLoader.getInstance().loadImage(imageUrl, new ImageSize(48, 48), new ImageLoadingListener() {
+                                @Override
+                                public void onLoadingStarted(String imageUri, View view) {
+
+                                }
+
+                                @Override
+                                public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
+
+                                }
+
+                                @Override
+                                public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+                                    RoundedBitmapDrawable logo =
+                                            RoundedBitmapDrawableFactory.create(getResources(), loadedImage);
+                                    logo.setCircular(true);
+
+                                    mActionBar.setDisplayUseLogoEnabled(true);
+                                    mActionBar.setDisplayShowHomeEnabled(true);
+                                    mActionBar.setLogo(logo);
+                                }
+
+                                @Override
+                                public void onLoadingCancelled(String imageUri, View view) {
+
+                                }
+                            });
                             // TODO: Update toolbar here
                         } catch (JSONException e) {
                             Log.i(TAG, "Parsing product fail", e);
@@ -219,6 +258,17 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override
