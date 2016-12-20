@@ -5,7 +5,11 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_gravity="start">
-
+    <ImageView
+        android:id="@+id/avatar"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentLeft="true"/>
     <LinearLayout
         android:id="@+id/message_layout"
         android:layout_width="wrap_content"
@@ -13,8 +17,7 @@
         android:orientation="vertical"
         android:background="@drawable/message_bg_left"
         android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true">
+        android:layout_toRightOf="@id/avatar">
         <TextView
             android:id="@+id/user_name"
             android:layout_width="wrap_content"
@@ -34,9 +37,4 @@
             android:textSize="12sp"
             tools:text="Jul 9, 10:20"/>
     </LinearLayout>
-    <ImageView
-        android:id="@+id/avatar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toLeftOf="@id/message_layout"/>
 </RelativeLayout>
