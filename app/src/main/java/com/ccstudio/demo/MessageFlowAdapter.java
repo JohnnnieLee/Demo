@@ -27,12 +27,10 @@ public class MessageFlowAdapter extends RecyclerView.Adapter<MessageFlowAdapter.
     // TODO: Consider to use dagger here
     private final LayoutInflater mInflater;
     private final ImageLoader mImageLoader;
-    private final IHandle mHandle; // TODO: Store user data in MessageData
     private ArrayList<MessageData> mMessages;
-    public MessageFlowAdapter(final Context context, final IHandle handle) {
+    public MessageFlowAdapter(final Context context) {
         mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mImageLoader = ImageLoader.getInstance();
-        mHandle = handle;
         mMessages = new ArrayList<>();
     }
 
@@ -75,24 +73,8 @@ public class MessageFlowAdapter extends RecyclerView.Adapter<MessageFlowAdapter.
         MessageData data = mMessages.get(position);
         holder.mMessage.setText(data.message);
         holder.mDate.setText(data.date);
-        String username;
-        String avatarUrl;
-        switch (data.userType) {
-            case MessageData.USER_TYPE_BUYER:
-                username = mHandle.getBuyerName();
-                avatarUrl = mHandle.getBuyerImgUrl();
-                break;
-            case MessageData.USER_TYPE_SELLER:
-                username = mHandle.getSellerName();
-                avatarUrl = mHandle.getSellerImgeUrl();
-                break;
-            default:
-                Log.i(TAG, "Invalid user type= "+data.userType);
-                return;
-        }
-
-        holder.mUserName.setText(username);
-        mImageLoader.displayImage(avatarUrl, holder.mAvatar /* TODO: Should give cache setting here */);
+        holder.mUserName.setText(data.name);
+        mImageLoader.displayImage(data.avatarUrl, holder.mAvatar /* TODO: Should give cache setting here */);
     }
 
     @Override

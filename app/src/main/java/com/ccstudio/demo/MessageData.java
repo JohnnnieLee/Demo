@@ -17,13 +17,17 @@ public class MessageData {
     public static final int USER_TYPE_SELLER = 0;
     public static final int USER_TYPE_BUYER = 1;
 
+    public final String name;
     public final String message;
     public final String date;
+    public final String avatarUrl;
     public final @MessageData.UserType int userType;
 
-    public MessageData(String message, String date, @UserType int userType) {
+    public MessageData(String name, String message, String date, String avatarUrl, @UserType int userType) {
+        this.name = name;
         this.message = message;
         this.date = date;
+        this.avatarUrl = avatarUrl;
         this.userType = userType;
     }
 }

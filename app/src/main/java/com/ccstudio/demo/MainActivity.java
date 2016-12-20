@@ -21,7 +21,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements IHandle {
+public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String GET_PRODUCT_URL = "https://s3.amazonaws.com/carousell/static/android/product";
     private static final String PRODUCT_FIELD_NAME = "product";
@@ -41,12 +41,6 @@ public class MainActivity extends AppCompatActivity implements IHandle {
     private RequestQueue mVolleyQueue;
     private RecyclerView mRecyclerView;
     private MessageFlowAdapter mAdapter;
-
-    // TODO: Move to other place
-    private String mBuyerName;
-    private String mBuyImageUrl;
-    private String mSellerName;
-    private String mSellerImageUrl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements IHandle {
 
         mRecyclerView = (RecyclerView) findViewById(R.id.message_flow);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mAdapter = new MessageFlowAdapter(this, this); // TODO: Consider to remove handle and store data in MesssageData
+        mAdapter = new MessageFlowAdapter(this); // TODO: Consider to remove handle and store data in MesssageData
         mRecyclerView.setAdapter(mAdapter);
     }
 
@@ -110,6 +104,12 @@ public class MainActivity extends AppCompatActivity implements IHandle {
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
+                            JSONObject offer = response.getJSONObject(OFFER);
+                            String buyerName = offer.getString(BUYER_NAME);
+                            String buyImageUrl = offer.getString(BUYER_IMAGE_URL);
+                            String sellerName = offer.getString(SELLER_NAME);
+                            String sellerImageUrl = offer.getString(SELLER_IMAGE_URL);
+
                             JSONArray chats = response.getJSONArray(CHAT);
                             ArrayList<MessageData> messageData = new ArrayList<>(chats.length());
                             for (int i = 0; i < chats.length(); i++) {
@@ -118,15 +118,27 @@ public class MainActivity extends AppCompatActivity implements IHandle {
                                 String message = obj.getString(MESSAGE);
                                 String type = obj.getString(TYPE);
 
-                                messageData.add(new MessageData(message, timeStamp, type.equals("b") ? MessageData.USER_TYPE_BUYER : MessageData.USER_TYPE_SELLER));
+                                String username;
+                                String avatarUrl;
+                                @MessageData.UserType int userType;
+                                switch (type) {
+                                    case "b":
+                                        username = buyerName;
+                                        avatarUrl = buyImageUrl;
+                                        userType = MessageData.USER_TYPE_BUYER;
+                                        break;
+                                    case "s":
+                                        username = sellerName;
+                                        avatarUrl = sellerImageUrl;
+                                        userType = MessageData.USER_TYPE_SELLER;
+                                        break;
+                                    default:
+                                        Log.i(TAG, "Invalid user type= "+type);
+                                        continue;
+                                }
+                                messageData.add(new MessageData(username, message, timeStamp, avatarUrl, userType));
                             }
                             mAdapter.setData(messageData);
-
-                            JSONObject offer = response.getJSONObject(OFFER);
-                            mBuyerName = offer.getString(BUYER_NAME);
-                            mBuyImageUrl = offer.getString(BUYER_IMAGE_URL);
-                            mSellerName = offer.getString(SELLER_NAME);
-                            mSellerImageUrl = offer.getString(SELLER_IMAGE_URL);
                         } catch (JSONException e) {
                             Log.i(TAG, "Parsing product fail", e);
                         }
@@ -146,25 +158,5 @@ public class MainActivity extends AppCompatActivity implements IHandle {
         super.onDestroy();
 
         mVolleyQueue.stop();
-    }
-
-    @Override
-    public String getBuyerName() {
-        return mBuyerName;
-    }
-
-    @Override
-    public String getBuyerImgUrl() {
-        return mBuyImageUrl;
-    }
-
-    @Override
-    public String getSellerName() {
-        return mSellerName;
-    }
-
-    @Override
-    public String getSellerImgeUrl() {
-        return mSellerImageUrl;
     }
 }
