@@ -74,7 +74,7 @@ public class MessageFlowAdapter extends RecyclerView.Adapter<MessageFlowAdapter.
         holder.mMessage.setText(data.message);
         holder.mDate.setText(data.date);
         holder.mUserName.setText(data.name);
-        mImageLoader.displayImage(data.avatarUrl, holder.mAvatar /* TODO: Should give cache setting here */);
+        mImageLoader.displayImage(data.avatarUrl, holder.mAvatar);
     }
 
     @Override
@@ -97,5 +97,10 @@ public class MessageFlowAdapter extends RecyclerView.Adapter<MessageFlowAdapter.
     public void setData(ArrayList<MessageData> data) {
         mMessages = data;
         notifyDataSetChanged();
+    }
+
+    public void appendData(MessageData data) {
+        mMessages.add(data);
+        notifyItemInserted(mMessages.size()-1);
     }
 }

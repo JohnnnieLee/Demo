@@ -1,10 +1,14 @@
 package com.ccstudio.demo;
 
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.View;
+import android.widget.EditText;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -12,6 +16,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.fasterxml.jackson.databind.util.ISO8601Utils;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
@@ -19,7 +24,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.ParseException;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -38,9 +48,20 @@ public class MainActivity extends AppCompatActivity {
     private static final String SELLER_NAME = "seller_name";
     private static final String SELLER_IMAGE_URL = "seller_image_url";
 
+    private final SimpleDateFormat mDateTimeFormatter = new SimpleDateFormat("MMM d, HH:mm", Locale.getDefault());
+
     private RequestQueue mVolleyQueue;
+
     private RecyclerView mRecyclerView;
+    private LinearLayoutManager mLinearLayoutManager;
     private MessageFlowAdapter mAdapter;
+    private View mEnterBtn;
+    private EditText mInputField;
+
+    // TODO: Apply MVP pattern, this should not be here
+    private String mCurrentUser = "";
+    private String mCurrentAvatarUrl = "";
+    private @MessageData.UserType int mCurrentUserType = MessageData.USER_TYPE_UNKNOWN;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,9 +88,40 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mRecyclerView = (RecyclerView) findViewById(R.id.message_flow);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mAdapter = new MessageFlowAdapter(this); // TODO: Consider to remove handle and store data in MesssageData
+        mLinearLayoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(mLinearLayoutManager);
+        mAdapter = new MessageFlowAdapter(this);
         mRecyclerView.setAdapter(mAdapter);
+        mEnterBtn = findViewById(R.id.enter);
+        mEnterBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendMessage(mInputField.getText().toString());
+                mInputField.setText("");
+            }
+        });
+        mInputField = (EditText) findViewById(R.id.input);
+        mInputField.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (event.getAction() == KeyEvent.ACTION_UP) {
+                    switch (keyCode) {
+                        case KeyEvent.KEYCODE_ENTER:
+                            sendMessage(mInputField.getText().toString());
+                            mInputField.setText("");
+                            return true;
+                    }
+                }
+                return false;
+            }
+        });
+    }
+
+    private void sendMessage(String msg) {
+        MessageData data = new MessageData(mCurrentUser, msg,
+                mDateTimeFormatter.format(new Date()), mCurrentAvatarUrl, mCurrentUserType);
+        mAdapter.appendData(data);
+        mLinearLayoutManager.scrollToPosition(mAdapter.getItemCount()-1);
     }
 
     private void queryProductInfo() {
@@ -114,7 +166,13 @@ public class MainActivity extends AppCompatActivity {
                             ArrayList<MessageData> messageData = new ArrayList<>(chats.length());
                             for (int i = 0; i < chats.length(); i++) {
                                 JSONObject obj = chats.getJSONObject(i);
-                                String timeStamp = obj.getString(TIME_STAMP);
+                                String timeStamp = "";
+                                try {
+                                    Date date = ISO8601Utils.parse(obj.getString(TIME_STAMP), new ParsePosition(0));
+                                    timeStamp = mDateTimeFormatter.format(date);
+                                } catch (ParseException e) {
+                                    Log.d(TAG, "Parse timestmp fail", e);
+                                }
                                 String message = obj.getString(MESSAGE);
                                 String type = obj.getString(TYPE);
 
@@ -131,6 +189,11 @@ public class MainActivity extends AppCompatActivity {
                                         username = sellerName;
                                         avatarUrl = sellerImageUrl;
                                         userType = MessageData.USER_TYPE_SELLER;
+
+                                        // Current user data should not get from this api...
+                                        mCurrentUser = username;
+                                        mCurrentAvatarUrl = avatarUrl;
+                                        mCurrentUserType = MessageData.USER_TYPE_SELLER;
                                         break;
                                     default:
                                         Log.i(TAG, "Invalid user type= "+type);
@@ -151,6 +214,11 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
         mVolleyQueue.add(requestProductInfo);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
     }
 
     @Override
