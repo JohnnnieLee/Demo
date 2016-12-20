@@ -12,6 +12,8 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -51,9 +53,15 @@ public class MainActivity extends AppCompatActivity implements IHandle {
         super.onCreate(savedInstanceState);
 
         initVolley();
+        initImageLoader();
         initView();
         queryProductInfo();
         queryMessages();
+    }
+
+    private void initImageLoader() {
+        ImageLoaderConfiguration.Builder builder = new ImageLoaderConfiguration.Builder(this);
+        ImageLoader.getInstance().init(builder.build());
     }
 
     private void initVolley() {
