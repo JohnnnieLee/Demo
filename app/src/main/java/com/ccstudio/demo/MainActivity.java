@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity implements IHandle {
     private static final String SELLER_NAME = "seller_name";
     private static final String SELLER_IMAGE_URL = "seller_image_url";
 
-    private final RequestQueue mVolleyQueue = Volley.newRequestQueue(this);
+    private RequestQueue mVolleyQueue;
     private RecyclerView mRecyclerView;
     private MessageFlowAdapter mAdapter;
 
@@ -50,9 +50,14 @@ public class MainActivity extends AppCompatActivity implements IHandle {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        initVolley();
         initView();
         queryProductInfo();
         queryMessages();
+    }
+
+    private void initVolley() {
+        mVolleyQueue = Volley.newRequestQueue(this);
         mVolleyQueue.start();
     }
 
@@ -110,10 +115,10 @@ public class MainActivity extends AppCompatActivity implements IHandle {
                             mAdapter.setData(messageData);
 
                             JSONObject offer = response.getJSONObject(OFFER);
-                            mBuyerName = response.getString(BUYER_NAME);
-                            mBuyImageUrl = response.getString(BUYER_IMAGE_URL);
-                            mSellerName = response.getString(SELLER_NAME);
-                            mSellerImageUrl = response.getString(SELLER_IMAGE_URL);
+                            mBuyerName = offer.getString(BUYER_NAME);
+                            mBuyImageUrl = offer.getString(BUYER_IMAGE_URL);
+                            mSellerName = offer.getString(SELLER_NAME);
+                            mSellerImageUrl = offer.getString(SELLER_IMAGE_URL);
                         } catch (JSONException e) {
                             Log.i(TAG, "Parsing product fail", e);
                         }
