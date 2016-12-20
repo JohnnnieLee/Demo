@@ -2,6 +2,7 @@ package com.ccstudio.demo;
 
 import android.support.annotation.IntDef;
 
+import java.io.Serializable;
 import java.lang.annotation.Retention;
 
 import static java.lang.annotation.RetentionPolicy.SOURCE;
@@ -10,7 +11,7 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  * Created by Johnny on 2016/12/20.
  */
 
-public class MessageData {
+public class MessageData implements Serializable {
     @Retention(SOURCE)
     @IntDef({USER_TYPE_SELLER, USER_TYPE_BUYER})
     public @interface UserType {}
@@ -24,7 +25,7 @@ public class MessageData {
     public final String avatarUrl;
     public final @MessageData.UserType int userType;
 
-    public MessageData(String name, String message, String date, String avatarUrl, @UserType int userType) {
+    public MessageData(String name, String message, String date, String avatarUrl, int userType) {
         this.name = name;
         this.message = message;
         this.date = date;

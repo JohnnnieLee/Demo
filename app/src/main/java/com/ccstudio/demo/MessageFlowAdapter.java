@@ -1,9 +1,6 @@
 package com.ccstudio.demo;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -13,8 +10,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.assist.FailReason;
-import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
 import java.util.ArrayList;
 
@@ -30,12 +25,10 @@ public class MessageFlowAdapter extends RecyclerView.Adapter<MessageFlowAdapter.
     private static final int VIEWTYPE_RIGHT = 2;
 
     // TODO: Consider to use dagger here
-    private final Context mContext;
     private final LayoutInflater mInflater;
     private final ImageLoader mImageLoader;
     private ArrayList<MessageData> mMessages;
     public MessageFlowAdapter(final Context context) {
-        mContext = context;
         mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mImageLoader = ImageLoader.getInstance();
         mMessages = new ArrayList<>();
@@ -81,30 +74,16 @@ public class MessageFlowAdapter extends RecyclerView.Adapter<MessageFlowAdapter.
         holder.mMessage.setText(data.message);
         holder.mDate.setText(data.date);
         holder.mUserName.setText(data.name);
-        mImageLoader.loadImage(data.avatarUrl, new ImageLoadingListener() {
-            @Override
-            public void onLoadingStarted(String imageUri, View view) {
+        mImageLoader.displayImage(data.avatarUrl, holder.mAvatar, MainActivity.DISPLAY_IMAGE_OPTIONS);
+    }
 
-            }
-
-            @Override
-            public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
-
-            }
-
-            @Override
-            public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-                RoundedBitmapDrawable avatar =
-                        RoundedBitmapDrawableFactory.create(mContext.getResources(), loadedImage);
-                avatar.setCircular(true);
-                holder.mAvatar.setImageDrawable(avatar);
-            }
-
-            @Override
-            public void onLoadingCancelled(String imageUri, View view) {
-
-            }
-        });
+    @Override
+    public void onViewRecycled(MessageViewHolder holder) {
+        holder.mUserName.setText("");
+        holder.mMessage.setText("");
+        holder.mDate.setText("");
+        ImageLoader.getInstance().cancelDisplayTask(holder.mAvatar);
+        holder.mAvatar.setImageDrawable(null);
     }
 
     @Override

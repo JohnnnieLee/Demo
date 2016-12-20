@@ -22,10 +22,12 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.fasterxml.jackson.databind.util.ISO8601Utils;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.assist.ImageSize;
+import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
 import org.json.JSONArray;
@@ -56,6 +58,12 @@ public class MainActivity extends AppCompatActivity {
     private static final String SELLER_NAME = "seller_name";
     private static final String SELLER_IMAGE_URL = "seller_image_url";
 
+    public final static DisplayImageOptions DISPLAY_IMAGE_OPTIONS =
+            new DisplayImageOptions.Builder()
+                    .cacheInMemory(true)
+                    .cacheOnDisk(true)
+                    .build();
+
     private final SimpleDateFormat mDateTimeFormatter = new SimpleDateFormat("MMM d, HH:mm", Locale.getDefault());
 
     private RequestQueue mVolleyQueue;
@@ -70,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
     // TODO: Apply MVP pattern, this should not be here
     private String mCurrentUser = "";
     private String mCurrentAvatarUrl = "";
-    private @MessageData.UserType int mCurrentUserType = MessageData.USER_TYPE_UNKNOWN;
+    private int mCurrentUserType = MessageData.USER_TYPE_UNKNOWN;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,12 +87,14 @@ public class MainActivity extends AppCompatActivity {
         initVolley();
         initImageLoader();
         initView();
+
         queryProductInfo();
         queryMessages();
     }
 
     private void initImageLoader() {
         ImageLoaderConfiguration.Builder builder = new ImageLoaderConfiguration.Builder(this);
+        builder.tasksProcessingOrder(QueueProcessingType.FIFO);
         ImageLoader.getInstance().init(builder.build());
     }
 
@@ -143,37 +153,9 @@ public class MainActivity extends AppCompatActivity {
                     public void onResponse(JSONObject response) {
                         try {
                             JSONObject product = response.getJSONObject(PRODUCT_FIELD_NAME);
-                            String name = product.getString(PRODUCT_NAME);
-                            mActionBar.setTitle(name);
-                            String imageUrl = product.getString(PRODUCT_IMAGE_URL);
-                            ImageLoader.getInstance().loadImage(imageUrl, new ImageSize(48, 48), new ImageLoadingListener() {
-                                @Override
-                                public void onLoadingStarted(String imageUri, View view) {
-
-                                }
-
-                                @Override
-                                public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
-
-                                }
-
-                                @Override
-                                public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-                                    RoundedBitmapDrawable logo =
-                                            RoundedBitmapDrawableFactory.create(getResources(), loadedImage);
-                                    logo.setCircular(true);
-
-                                    mActionBar.setDisplayUseLogoEnabled(true);
-                                    mActionBar.setDisplayShowHomeEnabled(true);
-                                    mActionBar.setLogo(logo);
-                                }
-
-                                @Override
-                                public void onLoadingCancelled(String imageUri, View view) {
-
-                                }
-                            });
-                            // TODO: Update toolbar here
+                            String productName = product.getString(PRODUCT_NAME);
+                            String productImgUrl = product.getString(PRODUCT_IMAGE_URL);
+                            updateActionBar(productName, productImgUrl);
                         } catch (JSONException e) {
                             Log.i(TAG, "Parsing product fail", e);
                         }
@@ -186,6 +168,37 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
         mVolleyQueue.add(requestProductInfo);
+    }
+
+    private void updateActionBar(String productName, String productImgUrl) {
+        mActionBar.setTitle(productName);
+        ImageLoader.getInstance().loadImage(productImgUrl, new ImageSize(48, 48), DISPLAY_IMAGE_OPTIONS, new ImageLoadingListener() {
+            @Override
+            public void onLoadingStarted(String imageUri, View view) {
+
+            }
+
+            @Override
+            public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
+
+            }
+
+            @Override
+            public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+                RoundedBitmapDrawable logo =
+                        RoundedBitmapDrawableFactory.create(getResources(), loadedImage);
+                logo.setCircular(true);
+
+                mActionBar.setDisplayUseLogoEnabled(true);
+                mActionBar.setDisplayShowHomeEnabled(true);
+                mActionBar.setLogo(logo);
+            }
+
+            @Override
+            public void onLoadingCancelled(String imageUri, View view) {
+
+            }
+        });
     }
 
     private void queryMessages() {
@@ -276,5 +289,6 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
 
         mVolleyQueue.stop();
+        ImageLoader.getInstance().destroy();
     }
 }
